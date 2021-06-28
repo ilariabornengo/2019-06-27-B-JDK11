@@ -5,8 +5,11 @@
 package it.polito.tdp.crimes;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.crimes.model.Adiacenza;
 import it.polito.tdp.crimes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,16 +28,16 @@ public class CrimesController {
     private URL location;
 
     @FXML // fx:id="boxCategoria"
-    private ComboBox<?> boxCategoria; // Value injected by FXMLLoader
+    private ComboBox<String> boxCategoria; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxMese"
-    private ComboBox<?> boxMese; // Value injected by FXMLLoader
+    private ComboBox<Integer> boxMese; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAnalisi"
     private Button btnAnalisi; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxArco"
-    private ComboBox<?> boxArco; // Value injected by FXMLLoader
+    private ComboBox<Adiacenza> boxArco; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnPercorso"
     private Button btnPercorso; // Value injected by FXMLLoader
@@ -45,13 +48,46 @@ public class CrimesController {
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Crea grafo...\n");
+    	Integer mese=this.boxMese.getValue();
+    	String categoria=this.boxCategoria.getValue();
+    	if(mese==null || categoria==null)
+    	{
+    		txtResult.appendText("selezionare tutti i campi\n");
+    	}else
+    	{
+    		this.model.creaGrafo(mese, categoria);
+    		txtResult.appendText("GRAFO CREATO!\n");
+    		txtResult.appendText("# archi: "+this.model.getArchi()+"\n");
+    		txtResult.appendText("# vertici: "+this.model.getVertici()+"\n");
+    	
+    	
+	    	double pesoM=this.model.pesoMedio();
+	    	List<Adiacenza> lista=new ArrayList<Adiacenza>(this.model.getMeglioDi(pesoM, mese, categoria));
+	    	txtResult.appendText("IL PESO MEDIO E' : "+pesoM+" E GLI ARCHI CHE LO SUPERANO SONO\n");
+	    	for(Adiacenza a:lista)
+	    	{
+	    		txtResult.appendText(a.toString()+"\n");
+	    	}
+	    	this.boxArco.getItems().addAll(this.model.getAdi(mese, categoria));
+    	}
     }
     
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
     	txtResult.clear();
     	txtResult.appendText("Calcola percorso...\n");
+    	Adiacenza a=this.boxArco.getValue();
+    	if(a==null)
+    	{
+    		txtResult.appendText("scegliere un arco!\n");
+    	}else
+    	{
+    		List<String> percorsoBest=new ArrayList<String>(this.model.getListaBest(a));
+    		for(String s:percorsoBest)
+    		{
+    			txtResult.appendText(s+"\n");
+    		}
+    	}
     }
     
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -67,5 +103,7 @@ public class CrimesController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.boxCategoria.getItems().addAll(this.model.categorie());
+    	this.boxMese.getItems().addAll(this.model.mesi());
     }
 }
